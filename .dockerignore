@@ -1,0 +1,15 @@
+# Keep secrets, local state and host-specific tooling out of the build context.
+.git
+.venv
+.idea
+*.egg-info
+**/__pycache__
+**/*.py[cod]
+**/.mypy_cache
+**/.ruff_cache
+**/.pytest_cache
+data/
+examples/
+.env
+.env.*
+!.env.example

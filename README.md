@@ -255,6 +255,35 @@ Artifacts per run: `report.md`, `report.json`, `plan.json`, `diff.patch`,
 If you want the change, merge the branch yourself. When a run fails, any partial work is
 committed to its branch with an `[INCOMPLETE]` prefix so you can inspect it.
 
+### 4. Running with Docker (optional)
+
+The image bundles Python 3.12, git, the `claude` CLI and every extra. `./data` and
+`./examples` are bind-mounted, so runs and branches land in the same places as above.
+
+```bash
+export HOST_UID=$(id -u) HOST_GID=$(id -g)   # or put them in .env; default 1000
+docker compose build
+docker compose run --rm examples                     # materialize ./examples
+docker compose run --rm engineer --repo examples/sample-fastapi \
+  --task "Add a GET /health endpoint that returns {'status':'ok'} and add tests." \
+  --provider scripted --script tests/fixtures/scripts/sample-fastapi.json
+docker compose run --rm test                         # ruff + mypy + pytest
+```
+
+For the claude-code provider, either set `ANTHROPIC_API_KEY`, or log in once with
+`docker compose run --rm --entrypoint claude engineer` → `/login`. The login persists in
+the `claude-config` volume. Compose forwards only the engineer's own variables (from your
+shell or `.env`). Host-specific paths (`ENGINEER_PYTHON`, `ENGINEER_CLAUDE_CLI`,
+`ENGINEER_DATA_DIR`) are never forwarded.
+
+To target your own repos, set `ENGINEER_REPOS_DIR=/path/to/repos` and pass
+`--repo /repos/<name>`. Things to know:
+
+- The container is packaging, not a sandbox. Validation still runs target-repo code with
+  access to everything that's mounted. Only use trusted repos.
+- Git records worktrees under container paths (`/app/data/...`). A `git worktree prune` run
+  on the host will drop those registrations. The branches themselves are unaffected.
+
 ---
 
 ## Configuration

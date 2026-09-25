@@ -29,6 +29,9 @@ unless asked.
 .venv/bin/python -m engineer.run --repo ./examples/sample-fastapi --task "..."        # real run (Claude Code)
 .venv/bin/python -m engineer.run --repo ./examples/sample-fastapi --task "..." \
     --provider scripted --script tests/fixtures/scripts/sample-fastapi.json         # offline, no model
+
+docker compose build && docker compose run --rm test           # same checks in the container
+docker compose run --rm engineer --repo examples/... --task "..."   # entrypoint is engineer.run
 ```
 
 `make` is not installed on the dev machine; the `Makefile` is only a convenience wrapper.

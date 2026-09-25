@@ -1,0 +1,59 @@
+# Usage (see README "Docker"):
+#   docker compose build
+#   docker compose run --rm examples                       # materialize ./examples
+#   docker compose run --rm engineer --repo examples/sample-fastapi \
+#       --task "Add a GET /health endpoint ..." \
+#       --provider scripted --script tests/fixtures/scripts/sample-fastapi.json
+#   docker compose run --rm test                           # pytest + ruff + mypy
+
+x-engineer: &engineer
+  build:
+    context: .
+    args:
+      UID: ${HOST_UID:-1000}
+      GID: ${HOST_GID:-1000}
+  image: autonomous-engineer:latest
+  working_dir: /app
+  # Pass-through only: unset vars stay unset in the container. Host paths such as
+  # ENGINEER_PYTHON / ENGINEER_CLAUDE_CLI / ENGINEER_DATA_DIR are deliberately not forwarded.
+  environment:
+    - ANTHROPIC_API_KEY
+    - ENGINEER_PROVIDER
+    - ENGINEER_MODEL
+    - ENGINEER_EFFORT
+    - MAX_AGENT_ITERATIONS
+    - MAX_TOOL_CALLS_PER_ITERATION
+    - ENGINEER_COMMAND_TIMEOUT
+    - REQUIRE_PLAN_APPROVAL
+    - ENGINEER_EXTRA_SENSITIVE_PATTERNS
+  volumes:
+    - ./data:/app/data
+    - ./examples:/app/examples
+    - ${ENGINEER_REPOS_DIR:-./examples}:/repos
+    - claude-config:/home/engineer/.claude
+
+services:
+  engineer:
+    <<: *engineer
+    entrypoint: ["python", "-m", "engineer.run"]
+    command: ["--help"]
+    stdin_open: true   # for --approve-plan
+    tty: true
+
+  examples:
+    <<: *engineer
+    profiles: [tools]
+    entrypoint: ["python", "-m", "engineer.examples"]
+    command: []
+
+  test:
+    <<: *engineer
+    profiles: [dev]
+    entrypoint: ["sh", "-c"]
+    command: ["python -m ruff check . && python -m mypy && python -m pytest -q"]
+    # Tests build their own throwaway repos; they need neither data/ nor examples/.
+    volumes: []
+
+volumes:
+  # Persists a `claude` login made with: docker compose run --rm --entrypoint claude engineer
+  claude-config:

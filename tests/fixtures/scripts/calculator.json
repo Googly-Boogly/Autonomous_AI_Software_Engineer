@@ -1,0 +1,96 @@
+{
+  "planner": [
+    {
+      "tool_calls": [
+        {
+          "name": "search_code",
+          "arguments": {
+            "query": "def subtract"
+          }
+        }
+      ]
+    },
+    {
+      "tool_calls": [
+        {
+          "name": "submit_plan",
+          "arguments": {
+            "task_summary": "Fix subtract() (it adds instead of subtracting) and add a regression test.",
+            "assumptions": [],
+            "files_to_inspect": [
+              "calculator/ops.py"
+            ],
+            "files_expected_to_change": [
+              "calculator/ops.py"
+            ],
+            "implementation_steps": [
+              "Change subtract to return a - b",
+              "Add regression tests for subtract",
+              "Run pytest"
+            ],
+            "tests_to_add_or_modify": [
+              "tests/test_subtract.py"
+            ],
+            "commands_expected_to_run": [
+              "pytest"
+            ],
+            "security_considerations": [
+              "No security-sensitive code is touched."
+            ],
+            "uncertainty": "",
+            "estimated_complexity": "trivial"
+          }
+        }
+      ]
+    }
+  ],
+  "engineer": [
+    [
+      {
+        "tool_calls": [
+          {
+            "name": "replace_in_file",
+            "arguments": {
+              "path": "calculator/ops.py",
+              "old": "    return a + b\n",
+              "new": "    return a - b\n"
+            }
+          }
+        ]
+      },
+      {
+        "tool_calls": [
+          {
+            "name": "replace_in_file",
+            "arguments": {
+              "path": "calculator/ops.py",
+              "old": "def subtract(a: float, b: float) -> float:\n    return a + b\n",
+              "new": "def subtract(a: float, b: float) -> float:\n    return a - b\n"
+            }
+          }
+        ]
+      },
+      {
+        "tool_calls": [
+          {
+            "name": "write_file",
+            "arguments": {
+              "path": "tests/test_subtract.py",
+              "content": "from calculator import subtract\n\n\ndef test_subtract():\n    assert subtract(5, 3) == 2\n\n\ndef test_subtract_negative_result():\n    assert subtract(3, 5) == -2\n"
+            }
+          }
+        ]
+      },
+      {
+        "tool_calls": [
+          {
+            "name": "finish",
+            "arguments": {
+              "summary": "subtract now returns a - b; added regression tests."
+            }
+          }
+        ]
+      }
+    ]
+  ]
+}

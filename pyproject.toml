@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "autonomous-engineer"
+version = "0.1.0"
+description = "A bounded autonomous software engineer: the model proposes, deterministic software decides."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.7",
+]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.40"]
+claude-code = ["claude-agent-sdk>=0.1"]
+dev = [
+    "pytest>=8",
+    "ruff>=0.5",
+    "mypy>=1.10",
+    # Needed only so the sample-fastapi fixture's own test suite can run.
+    "fastapi>=0.110",
+    "httpx>=0.27",
+]
+
+[tool.setuptools.packages.find]
+include = ["engineer*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Fixture repositories contain their own test suites; they are run inside
+# isolated worktrees by the engineer, never collected directly.
+norecursedirs = ["tests/fixtures", "data", "examples", ".venv"]
+addopts = "-p no:cacheprovider"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["tests/fixtures", "data", "examples"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S"]
+ignore = ["S603", "S607"]  # subprocess calls are list-based and allowlisted by design
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S108", "S604"]  # tests deliberately use fake secrets / hostile inputs
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["engineer"]
+
+[[tool.mypy.overrides]]
+module = ["anthropic", "anthropic.*", "claude_agent_sdk", "claude_agent_sdk.*"]
+ignore_missing_imports = true
